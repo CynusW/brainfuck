@@ -8,21 +8,19 @@ typedef std::unique_ptr<cell_size> BFCell;
 
 struct BFLoop
 {
-    size_t start;
-    size_t end;
+    size_t start = 0;
+    size_t end = 0;
 };
-
-bool isValidBFCode(std::string code);
 
 class BFShell
 {
 public:
     BFShell();
-    virtual ~BFShell();
+    virtual ~BFShell() { }
 
     int run();
 
-    void execute(std::string code);
+    void execute(const std::string code);
 
     void put();
 

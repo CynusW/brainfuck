@@ -3,28 +3,33 @@
 #include <sstream>
 #include <fstream>
 #include <numeric>
+#include <algorithm>
+#include <locale>
 
 #include "bfshell.h"
 
 void showHelp();
 
-std::string readFile(std::string path);
+std::string readFile(const std::string path);
 
 void removeWhitespace(std::string& str);
 
-void processBFCode(std::string code);
-
-int main(int argc, const std::string argv[])
+int main(int argc, const char* cargv[])
 {
     int status = 0;
+
+    std::string* argv = new std::string[argc];
+    std::transform(cargv, cargv + argc, argv, [](const char* cstr) { return std::string(cstr); });
         
-    if (argc == 1)
+    if (argc <= 1)
     {
         showHelp();
     }
 
     else
     {
+        BFShell shell;
+
         if (argv[1] == "-h" || argv[1] == "--help")
         {
             showHelp();
@@ -32,7 +37,6 @@ int main(int argc, const std::string argv[])
 
         else if (argv[1] == "--shell")
         {
-            BFShell shell;
             status = shell.run();
         }
 
@@ -48,18 +52,21 @@ int main(int argc, const std::string argv[])
                 std::string code = readFile(argv[2]);
                 removeWhitespace(code);
 
-                processBFCode(code);
+                shell.execute(code);
             }
         }
 
         else
         {
-            std::string code = std::accumulate(argv + 2, argv + argc);
+            std::string code = std::accumulate(argv + 1, argv + argc, std::string());
+            removeWhitespace(code);
+
+            shell.execute(code);
         }
         
     }
-    
 
+    delete[] argv;
 
     return status;
 }
@@ -73,7 +80,7 @@ void showHelp()
         << "<bf_code>\t\tInterprets a one-line bf code\n";
 }
 
-std::string readFile(std::string path)
+std::string readFile(const std::string path)
 {
     std::string contents = "";
     std::ifstream file(path, std::ios::in);
@@ -91,4 +98,20 @@ std::string readFile(std::string path)
     }
 
     return contents;
+}
+
+void removeWhitespace(std::string& str)
+{
+    std::string::iterator begin = str.begin();
+    std::string::iterator end;
+
+    while ((begin = std::find_if(
+        begin,
+        str.end(),
+        [] (const char& c) { return isspace(c); }
+    )) != str.end())
+    {
+        end = std::find_if(begin, str.end(), [](const char& c) { return !isspace(c); });
+        begin = str.erase(begin, end);
+    }
 }
