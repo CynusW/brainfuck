@@ -6,10 +6,42 @@
 #include <locale>
 #include <limits>
 
+BFLoop::BFLoop(size_t start, const std::string& code)
+{
+    this->start = start;
+
+    std::stack<cell_size> temp;
+    bool foundEnd = false;
+
+    while (!foundEnd)
+    {
+        const char& c = code.at(start);
+        if (c == '[')
+        {
+            temp.push('[');
+        }
+
+        else if (c ==']')
+        {
+            if (!temp.empty())
+            {
+                temp.pop();
+                if (temp.empty())
+                {
+                    this->end = start;
+                    foundEnd = true;
+                }
+            }
+        }
+
+        start++;
+    }
+}
+
 BFShell::BFShell()
 {
     index = 0;
-    cells.push_back(BFCell());
+    cells.push_back(BFCell(new cell_size(0)));
 }
 
 int BFShell::run()
@@ -37,7 +69,15 @@ int BFShell::run()
             continue;
         }
 
-        execute(input);
+        else if (input == "show")
+        {
+            std::cout << index << " | " << (int)(*(cells.at(index))) << std::endl;
+        }
+
+        else 
+        {
+            execute(input);
+        }
     }
 
     return status;
@@ -84,74 +124,52 @@ void BFShell::execute(const std::string code)
         {
         case '>':
             {
-                std::cout << "SHIFT RIGHT\n";
-
                 index++;
                 if (index >= cells.size())
                 {
-                    cells.push_back(BFCell());
+                    cells.push_back(BFCell(new cell_size(0)));
                 }
             }
             break;
         case '<':
             {
-                std::cout << "SHIFT LEFT\n";
-
-                index--;
-                if (index < 0)
+                if (index == 0)
                 {
-                    cells.emplace(cells.begin(), BFCell());
-                    index++;
+                    cells.emplace(cells.begin(), BFCell(new cell_size(0)));
                 }
+
+                else index--;
             }
             break;
         case '+':
-            std::cout << "ADD\n";
-
             *(cells[index]) += 1;
             break;
         case '-':
-            std::cout << "SUBSTRACT\n";
-
             *(cells[index]) -= 1;
             break;
         case '.':
-            std::cout << "PUT\n";
-
             put();
             break;
         case ',':
-            std::cout << "GET\n";
-
             *(cells[index]) = get();
             break;
         case '[':
-            std::cout << "LOOP START\n";
-
-            if (!loops.empty() && loops.top().start == i)
             {
-                if (*(cells.at(index)) == 0)
+                if (loops.empty() || loops.top().start != i)
+                {
+                    loops.push(BFLoop(i, code));
+                }
+
+                if (*(cells.at(index)) == 0)                
                 {
                     i = loops.top().end;
                     loops.pop();
                 }
-
-                break;
-            }
-
-            {
-                BFLoop loop = { };
-                loop.start = i;
-
-                loops.push(loop);
             }
             break;
         case ']':
-            std::cout << "LOOP END\n";
-
             if (*(cells.at(index)) != 0)
             {
-                loops.top().end = i;
                 i = loops.top().start;
 
                 continue;
@@ -160,21 +178,25 @@ void BFShell::execute(const std::string code)
             else loops.pop();
             break;
         default:
-            std::cout << "DEFAULT\n";
             break;
         }
 
         i++;
     }
+
+    std::cout << std::endl << std::endl;
+    std::cout << index << " | " << (int)(*(cells.at(index))) << std::endl;
 }
 
 void BFShell::put()
 {
-    std::cout << *(cells.at(index));
+    std::putchar((int)(*(cells.at(index))));
 }
 
 cell_size BFShell::get()
 {
     cell_size c = getchar();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
     return c;
 }

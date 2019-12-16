@@ -10,6 +10,8 @@ struct BFLoop
 {
     size_t start = 0;
     size_t end = 0;
+
+    BFLoop(size_t start, const std::string& code);
 };
 
 class BFShell
