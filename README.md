@@ -12,6 +12,3 @@ In this Brainfuck interpreter, you have 3 options:
    - Executes a one-line BF code.
 
 Note: The memory is dynamically allocated.
-
-## Todo List
-- Fix errors
